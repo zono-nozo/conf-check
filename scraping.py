@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import unicodedata
 
 url = "https://www.ipsj.or.jp/event/taikai/89/index.html"
 response = requests.get(url)
@@ -9,4 +10,4 @@ h3 = soup.find("h3", string="開催概要")
 target = h3.find_next("p")
 
 print(response.status_code)
-print(target.text)
+print(unicodedata.normalize("NFKC", target.text))

@@ -1,7 +1,12 @@
 import requests
+from bs4 import BeautifulSoup
 
 url = "https://www.ipsj.or.jp/event/taikai/89/index.html"
 response = requests.get(url)
-response.encoding = response.apparent_encoding
+soup = BeautifulSoup(response.content, "html.parser")
+
+h3 = soup.find("h3", string="開催概要")
+target = h3.find_next("p")
+
 print(response.status_code)
-print(response.text[:500])
+print(target.text)

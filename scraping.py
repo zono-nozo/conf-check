@@ -1,12 +1,24 @@
 import requests
 from bs4 import BeautifulSoup
 import unicodedata
+import sys
 
 url = "https://www.ipsj.or.jp/event/taikai/89/index.html"
-response = requests.get(url)
-soup = BeautifulSoup(response.content, "html.parser")
 
-print(response.status_code)
+try:
+    response = requests.get(url, timeout=10)
+
+    response.raise_for_status()
+
+except requests.exceptions.Timeout:
+    print("Request timed out. Please try again later.")
+    sys.exit(1)
+
+except requests.exceptions.RequestException as e:
+    print(f"Error occurred while fetching the URL: {e}")
+    sys.exit(1)
+
+soup = BeautifulSoup(response.content, "html.parser")
 
 h3 = soup.find("h3", string="開催概要")
 target = h3.find_next("p")

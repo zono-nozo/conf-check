@@ -30,6 +30,6 @@ def update_conference_info(connection, conference_id, location, start_date, end_
     """
     with connection.cursor() as cursor:
         cursor.execute(
-            "UPDATE conferences SET location = %s, start_date = %s, end_date = %s WHERE conference_id = %s;",
+            "UPDATE conferences SET location = %s, start_date = %s, end_date = %s, checked_at = NOW() WHERE conference_id = %s;",
             (location, start_date, end_date, conference_id)
         )

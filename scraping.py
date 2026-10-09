@@ -1,7 +1,8 @@
+import connect_db
+
 import requests
 from bs4 import BeautifulSoup
 import unicodedata
-import sys
 import re
 import datetime
 
@@ -9,7 +10,6 @@ def fetch_html(url):
     response = requests.get(url, timeout=10)
     response.raise_for_status()
     return response.content
-
 
 def extract_conference_info(html_content):
     soup = BeautifulSoup(html_content, "html.parser")
@@ -47,15 +47,19 @@ def parse_conference_dates(period_text):
     else:
         raise ValueError("Date format not recognized.")
 
-url = "https://www.ipsj.or.jp/event/taikai/89/index.html"
+with connect_db.connect_to_db() as connection:
+    rows = connect_db.get_conferences_to_check(connection)
 
-try:
-    html_content = fetch_html(url)
-    conference_info = extract_conference_info(html_content)
-    start_date, end_date = parse_conference_dates(conference_info["大会会期"])
-except requests.RequestException as e:
-    print(f"Error fetching the URL: {e}")
-    sys.exit(1)
-except ValueError as e:
-    print(f"Error processing the conference information: {e}")
-    sys.exit(1)
+    for conference_id, url in rows:
+        try:
+            html_content = fetch_html(url)
+            conference_info = extract_conference_info(html_content)
+            start_date, end_date = parse_conference_dates(conference_info["大会会期"])
+        except requests.RequestException as e:
+            print(f"Error fetching the URL: {e}")
+            continue
+        except ValueError as e:
+            print(f"Error processing the conference information: {e}")
+            continue
+        
+        connect_db.update_conference_dates(connection, conference_id, start_date, end_date)

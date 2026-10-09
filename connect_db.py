@@ -10,8 +10,26 @@ db_password = os.getenv("DB_PASSWORD")
 db_host = os.getenv("DB_HOST")
 db_port = os.getenv("DB_PORT")
 
-with psycopg.connect(dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port) as connection:
+def connect_to_db():
+    """
+    Connects to the PostgreSQL database using credentials from environment variables.
+    """
+    return psycopg.connect(dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port)
+
+def get_conferences_to_check(connection):
+    """
+    Retrieves the conference URLs and their corresponding IDs from the database.
+    """
     with connection.cursor() as cursor:
-        cursor.execute("SELECT version();")
-        version = cursor.fetchone()
-        print(f"PostgreSQL version: {version[0]}")
+        cursor.execute("SELECT conference_id,url FROM conferences;")
+        return cursor.fetchall()
+
+def update_conference_dates(connection, conference_id, start_date, end_date):
+    """
+    Updates the conference dates in the database.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE conferences SET start_date = %s, end_date = %s WHERE conference_id = %s;",
+            (start_date, end_date, conference_id)
+        )

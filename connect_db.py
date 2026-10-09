@@ -33,3 +33,11 @@ def update_conference_info(connection, conference_id, location, start_date, end_
             "UPDATE conferences SET location = %s, start_date = %s, end_date = %s, checked_at = NOW() WHERE conference_id = %s;",
             (location, start_date, end_date, conference_id)
         )
+
+def get_conferences_info(connection):
+    """
+    Retrieves the information for all conferences.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT conference_name, location, start_date, end_date, url, checked_at FROM conferences;")
+        return cursor.fetchall()

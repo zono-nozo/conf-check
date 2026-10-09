@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学会調査</title>
+</head>    
+<body>
+    <table>
+    <tr>
+        <th>学会名</th>
+        <th>場所</th>
+        <th>開始日</th>
+        <th>終了日</th>
+        <th>詳細</th>
+        <th>最終更新</th>
+    </tr>
+    {% for conference in conferences %}
+    <tr>
+        <td>{{ conference.conference_name }}</td>
+        <td>{{ conference.location }}</td>
+        <td>{{ conference.start_date }}</td>
+        <td>{{ conference.end_date }}</td>
+        <td><a href="{{ conference.url }}" target="_blank">詳細</a></td>
+        <td>{{ conference.checked_at }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+</body>
+</html>

@@ -38,6 +38,6 @@ def get_conferences_info(connection):
     """
     Retrieves the information for all conferences.
     """
-    with connection.cursor() as cursor:
+    with connection.cursor(row_factory=psycopg.rows.dict_row) as cursor:
         cursor.execute("SELECT conference_name, location, start_date, end_date, url, checked_at FROM conferences;")
         return cursor.fetchall()

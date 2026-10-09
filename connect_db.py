@@ -24,12 +24,12 @@ def get_conferences_to_check(connection):
         cursor.execute("SELECT conference_id,url FROM conferences;")
         return cursor.fetchall()
 
-def update_conference_dates(connection, conference_id, start_date, end_date):
+def update_conference_info(connection, conference_id, location, start_date, end_date):
     """
-    Updates the conference dates in the database.
+    Updates the conference dates and location in the database.
     """
     with connection.cursor() as cursor:
         cursor.execute(
-            "UPDATE conferences SET start_date = %s, end_date = %s WHERE conference_id = %s;",
-            (start_date, end_date, conference_id)
+            "UPDATE conferences SET location = %s, start_date = %s, end_date = %s WHERE conference_id = %s;",
+            (location, start_date, end_date, conference_id)
         )

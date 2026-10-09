@@ -6,6 +6,11 @@ import unicodedata
 import re
 import datetime
 
+DATES = "大会会期"
+LOCATION = "会場"
+
+REQUIRED_KEYS = [DATES, LOCATION]
+
 def fetch_html(url):
     response = requests.get(url, timeout=10)
     response.raise_for_status()
@@ -21,17 +26,21 @@ def extract_conference_info(html_content):
     normalized_text = unicodedata.normalize("NFKC", target.text)
     texts = normalized_text.splitlines()
 
-    conf_info = {}
+    conference_info = {}
     for text in texts:
         parts = text.split(":", 1)
         if len(parts) == 2:
             key, value = parts
             key = key.replace(' ', '')
             value = value.strip()
-            if key == "大会会期" or key == "会場":
-                conf_info[key] = value
+            if key in REQUIRED_KEYS:
+                conference_info[key] = value
 
-    return conf_info
+    missing_keys = [key for key in REQUIRED_KEYS if key not in conference_info]
+    if missing_keys:
+        raise ValueError(f"Required information missing for keys: {missing_keys}")
+
+    return conference_info
 
 def parse_conference_dates(period_text):
     pattern = r"(\d+)年(\d+)月(\d+)日\(\w+\)~(\d+)日\(\w+\)"
@@ -46,20 +55,28 @@ def parse_conference_dates(period_text):
         return start_date, end_date
     else:
         raise ValueError("Date format not recognized.")
+    
+def main():
+    with connect_db.connect_to_db() as connection:
+        rows = connect_db.get_conferences_to_check(connection)
 
-with connect_db.connect_to_db() as connection:
-    rows = connect_db.get_conferences_to_check(connection)
+        for conference_id, url in rows:
+            try:
+                html_content = fetch_html(url)
+                conference_info = extract_conference_info(html_content)
+                
+                location = conference_info[LOCATION]
+                start_date, end_date = parse_conference_dates(conference_info[DATES])
 
-    for conference_id, url in rows:
-        try:
-            html_content = fetch_html(url)
-            conference_info = extract_conference_info(html_content)
-            start_date, end_date = parse_conference_dates(conference_info["大会会期"])
-        except requests.RequestException as e:
-            print(f"Error fetching the URL: {e}")
-            continue
-        except ValueError as e:
-            print(f"Error processing the conference information: {e}")
-            continue
-        
-        connect_db.update_conference_dates(connection, conference_id, start_date, end_date)
+            except requests.RequestException as e:
+                print(f"Error fetching the URL: {e}")
+                continue
+
+            except ValueError as e:
+                print(f"Error processing the conference information: {e}")
+                continue
+            
+            connect_db.update_conference_info(connection, conference_id, location, start_date, end_date)
+
+if __name__ == "__main__":
+    main()
